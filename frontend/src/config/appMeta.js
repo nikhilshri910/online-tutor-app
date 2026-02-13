@@ -1,6 +1,6 @@
 export const APP_META = {
-  title: "Online Tuition",
-  logoText: "OT"
+  title: "Brainwave FZCO",
+  logoText: "BW"
 };
 
 

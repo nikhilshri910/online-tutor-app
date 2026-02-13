@@ -1,5 +1,5 @@
 const express = require("express");
-const { requireAuth } = require("../middleware/authMiddleware");
+const { requireAuth, requirePasswordChangeCompleted } = require("../middleware/authMiddleware");
 const { allowRoles } = require("../middleware/roleMiddleware");
 const {
   listUsers,
@@ -21,7 +21,7 @@ const {
 
 const router = express.Router();
 
-router.use(requireAuth, allowRoles("admin"));
+router.use(requireAuth, requirePasswordChangeCompleted, allowRoles("admin"));
 
 router.get("/users", listUsers);
 router.post("/users", createUser);

@@ -28,6 +28,62 @@ function getErrorMessage(error, fallback) {
   return error?.response?.data?.message || fallback;
 }
 
+function sanitizeFilePart(value) {
+  return String(value || "user")
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function formatTimestampForFileName(date = new Date()) {
+  const pad = (num) => String(num).padStart(2, "0");
+  return [
+    date.getFullYear(),
+    pad(date.getMonth() + 1),
+    pad(date.getDate()),
+    "-",
+    pad(date.getHours()),
+    pad(date.getMinutes()),
+    pad(date.getSeconds())
+  ].join("");
+}
+
+function downloadCredentialsFile({ name, email, role, temporaryPassword, userId }) {
+  if (!temporaryPassword) {
+    return;
+  }
+
+  const issuedAt = new Date().toISOString();
+  const fileContent = [
+    "Brainwave FZCO - Temporary Login Credentials",
+    "",
+    `User ID: ${userId ?? "-"}`,
+    `Name: ${name ?? "-"}`,
+    `Email: ${email ?? "-"}`,
+    `Role: ${role ?? "-"}`,
+    `Temporary Password: ${temporaryPassword}`,
+    `Issued At (UTC): ${issuedAt}`,
+    "",
+    "Important:",
+    "- This is a temporary password created by admin.",
+    "- User must change password at first login.",
+    "- Share this file securely and delete it after use."
+  ].join("\n");
+
+  const blob = new Blob([fileContent], { type: "text/plain;charset=utf-8" });
+  const fileSafeEmail = sanitizeFilePart(email || name || "user");
+  const fileName = `temporary-credentials-${fileSafeEmail}-${formatTimestampForFileName()}.txt`;
+  const blobUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = blobUrl;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(blobUrl);
+}
+
 export function useAdminConsole() {
   const [users, setUsers] = useState([]);
   const [groups, setGroups] = useState([]);
@@ -133,12 +189,34 @@ export function useAdminConsole() {
   const createUser = useCallback(
     async (event) => {
       event.preventDefault();
-      return runAction(async () => {
-        await createAdminUser(userForm);
+      setError("");
+      setMessage("");
+
+      try {
+        const response = await createAdminUser(userForm);
+        const createdUser = response?.data?.user || {};
         setUserForm(initialUserForm);
-      }, ADMIN_MESSAGES.userCreated);
+        const temporaryPassword = response?.data?.temporaryPassword;
+        downloadCredentialsFile({
+          userId: createdUser.id,
+          name: createdUser.name || userForm.name,
+          email: createdUser.email || userForm.email,
+          role: createdUser.role || userForm.role,
+          temporaryPassword
+        });
+        setMessage(
+          temporaryPassword
+            ? `${ADMIN_MESSAGES.userCreated}. Credentials file downloaded.`
+            : `${ADMIN_MESSAGES.userCreated}. Temporary password unavailable.`
+        );
+        await loadAdminData();
+        return true;
+      } catch (err) {
+        setError(getErrorMessage(err, ADMIN_MESSAGES.genericActionError));
+        return false;
+      }
     },
-    [runAction, userForm]
+    [loadAdminData, userForm]
   );
 
   const createGroup = useCallback(

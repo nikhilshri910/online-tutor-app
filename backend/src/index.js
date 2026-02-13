@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const env = require("./config/env");
-const { testDbConnection } = require("./config/db");
+const { pool, testDbConnection } = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const courseRoutes = require("./routes/courseRoutes");
 const zoomRoutes = require("./routes/zoomRoutes");
@@ -40,6 +40,30 @@ app.use("/api/student", studentRoutes);
 
 app.use(errorHandler);
 
-app.listen(env.port, () => {
-  console.log(`Backend running on http://localhost:${env.port}`);
+async function ensureSchemaUpdates() {
+  const [rows] = await pool.query(
+    `SELECT 1
+     FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME = 'users'
+       AND COLUMN_NAME = 'must_change_password'
+     LIMIT 1`
+  );
+
+  if (!rows.length) {
+    await pool.query("ALTER TABLE users ADD COLUMN must_change_password TINYINT(1) NOT NULL DEFAULT 0");
+  }
+}
+
+async function startServer() {
+  await ensureSchemaUpdates();
+
+  app.listen(env.port, () => {
+    console.log(`Backend running on http://localhost:${env.port}`);
+  });
+}
+
+startServer().catch((error) => {
+  console.error("Failed to start backend", error);
+  process.exit(1);
 });

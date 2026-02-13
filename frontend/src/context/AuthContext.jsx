@@ -33,16 +33,28 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  const changePassword = useCallback(async (currentPassword, newPassword) => {
+    const payload = { newPassword };
+    if (currentPassword) {
+      payload.currentPassword = currentPassword;
+    }
+
+    const response = await api.post("/api/auth/change-password", payload);
+    setUser(response.data.user);
+    return response.data.user;
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
       loading,
       isAuthenticated: Boolean(user),
       login,
+      changePassword,
       logout,
       refreshMe
     }),
-    [user, loading, login, logout, refreshMe]
+    [user, loading, login, changePassword, logout, refreshMe]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -99,10 +99,6 @@ export default function AdminConsolePage() {
 
     const fields = resolveFields(modalConfig.fields, selectContext);
 
-    if (modalState.mode === "edit" && modalFormKey === "user") {
-      return fields.map((field) => (field.name === "password" ? { ...field, required: false } : field));
-    }
-
     if (modalState.mode === "edit" && modalFormKey === "recording") {
       return fields.map((field) =>
         field.name === "sourceVideoUrl"
@@ -139,7 +135,6 @@ export default function AdminConsolePage() {
       forms.user.setValue({
         name: row.name || "",
         email: row.email || "",
-        password: "",
         role: row.role || "student"
       });
       setModalState({ formKey: "user", mode: "edit", row });
@@ -227,10 +222,6 @@ export default function AdminConsolePage() {
         email: formRef.value.email,
         role: formRef.value.role
       };
-
-      if (formRef.value.password) {
-        payload.password = formRef.value.password;
-      }
 
       success = await actions.updateUser(row.id, payload);
     } else if (modalFormKey === "group") {

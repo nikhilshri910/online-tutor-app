@@ -32,8 +32,8 @@ export function useLoginForm() {
       setSubmitting(true);
 
       try {
-        await login(form.email, form.password);
-        navigate("/dashboard");
+        const user = await login(form.email, form.password);
+        navigate(user?.mustChangePassword ? "/change-password" : "/dashboard");
       } catch (err) {
         notification.error(getErrorMessage(err));
       } finally {

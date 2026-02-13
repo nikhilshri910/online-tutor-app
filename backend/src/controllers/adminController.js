@@ -1,4 +1,5 @@
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 const { pool } = require("../config/db");
 const { uploadToVimeoFromUrl } = require("../services/vimeoService");
 const { createNotificationsForUsers } = require("../services/notificationService");
@@ -15,8 +16,20 @@ async function ensureGroupExists(groupId) {
 }
 
 async function ensureUserExists(userId) {
-  const [rows] = await pool.query("SELECT id, role FROM users WHERE id = ? LIMIT 1", [userId]);
+  const [rows] = await pool.query("SELECT id, role, must_change_password FROM users WHERE id = ? LIMIT 1", [userId]);
   return rows[0] || null;
+}
+
+function generateTemporaryPassword(length = 12) {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  const bytes = crypto.randomBytes(length);
+  let value = "";
+
+  for (let i = 0; i < length; i += 1) {
+    value += alphabet[bytes[i] % alphabet.length];
+  }
+
+  return value;
 }
 
 async function ensureGroupSessionExists(groupId, sessionId) {
@@ -38,10 +51,15 @@ async function ensureGroupRecordingExists(groupId, recordingId) {
 async function listUsers(_req, res, next) {
   try {
     const [rows] = await pool.query(
-      "SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC"
+      "SELECT id, name, email, role, must_change_password, created_at FROM users ORDER BY created_at DESC"
     );
 
-    return res.json({ users: rows });
+    return res.json({
+      users: rows.map(({ must_change_password, ...row }) => ({
+        ...row,
+        mustChangePassword: Boolean(must_change_password)
+      }))
+    });
   } catch (err) {
     return next(err);
   }
@@ -49,25 +67,22 @@ async function listUsers(_req, res, next) {
 
 async function createUser(req, res, next) {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, role } = req.body;
 
-    if (!isNonEmptyString(name) || !isNonEmptyString(email) || !isNonEmptyString(password)) {
-      return res.status(400).json({ message: "name, email and password are required" });
+    if (!isNonEmptyString(name) || !isNonEmptyString(email)) {
+      return res.status(400).json({ message: "name and email are required" });
     }
 
     if (!allowedRoles.includes(role)) {
       return res.status(400).json({ message: "role must be admin, teacher, or student" });
     }
 
-    if (password.trim().length < 8) {
-      return res.status(400).json({ message: "password must be at least 8 characters" });
-    }
-
     const normalizedEmail = email.toLowerCase().trim();
-    const passwordHash = await bcrypt.hash(password, 10);
+    const temporaryPassword = generateTemporaryPassword();
+    const passwordHash = await bcrypt.hash(temporaryPassword, 10);
 
     const [result] = await pool.query(
-      "INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)",
+      "INSERT INTO users (name, email, password_hash, role, must_change_password) VALUES (?, ?, ?, ?, 1)",
       [name.trim(), normalizedEmail, passwordHash, role]
     );
 
@@ -77,8 +92,10 @@ async function createUser(req, res, next) {
         id: result.insertId,
         name: name.trim(),
         email: normalizedEmail,
-        role
-      }
+        role,
+        mustChangePassword: true
+      },
+      temporaryPassword
     });
   } catch (err) {
     if (err.code === "ER_DUP_ENTRY") {
@@ -123,6 +140,7 @@ async function updateUser(req, res, next) {
       const passwordHash = await bcrypt.hash(password, 10);
       updateParts.push("password_hash = ?");
       params.push(passwordHash);
+      updateParts.push("must_change_password = 1");
     }
 
     params.push(userId);
@@ -135,7 +153,8 @@ async function updateUser(req, res, next) {
         id: userId,
         name: name.trim(),
         email: normalizedEmail,
-        role
+        role,
+        mustChangePassword: isNonEmptyString(password) ? true : Boolean(existingUser.must_change_password)
       }
     });
   } catch (err) {

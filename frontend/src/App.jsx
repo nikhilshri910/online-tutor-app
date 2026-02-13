@@ -3,14 +3,16 @@ import { AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuth } from "./context/AuthContext";
+import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
+import ChangePasswordPage from "./pages/ChangePasswordPage";
 import DashboardPage from "./pages/DashboardPage";
 import AdminPage from "./pages/AdminPage";
 import AppHeader from "./features/shared/components/AppHeader";
 import AnimatedPage from "./features/shared/ui/AnimatedPage";
 
 export default function App() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const location = useLocation();
 
   return (
@@ -19,6 +21,15 @@ export default function App() {
       <main className="app-content">
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
+            <Route
+              path="/"
+              element={
+                <AnimatedPage>
+                  <HomePage />
+                </AnimatedPage>
+              }
+            />
+
             <Route
               path="/login"
               element={
@@ -51,8 +62,19 @@ export default function App() {
             />
 
             <Route
+              path="/change-password"
+              element={
+                <ProtectedRoute allowPasswordChangeRequired>
+                  <AnimatedPage>
+                    <ChangePasswordPage />
+                  </AnimatedPage>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
               path="*"
-              element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />}
+              element={<Navigate to={isAuthenticated ? (user?.mustChangePassword ? "/change-password" : "/dashboard") : "/"} replace />}
             />
           </Routes>
         </AnimatePresence>

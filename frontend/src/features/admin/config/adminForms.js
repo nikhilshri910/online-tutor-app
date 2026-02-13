@@ -3,7 +3,6 @@ import { USER_ROLE_OPTIONS } from "./adminConstants";
 export const initialUserForm = {
   name: "",
   email: "",
-  password: "",
   role: "student"
 };
 
@@ -29,7 +28,6 @@ export const initialRecordingForm = {
 export const userFormFields = [
   { name: "name", label: "Name", type: "text", required: true },
   { name: "email", label: "Email", type: "email", required: true },
-  { name: "password", label: "Password", type: "password", required: true },
   { name: "role", label: "Role", type: "select", options: USER_ROLE_OPTIONS, required: true }
 ];
 

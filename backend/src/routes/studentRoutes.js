@@ -1,5 +1,5 @@
 const express = require("express");
-const { requireAuth } = require("../middleware/authMiddleware");
+const { requireAuth, requirePasswordChangeCompleted } = require("../middleware/authMiddleware");
 const { allowRoles } = require("../middleware/roleMiddleware");
 const {
   getStudentPortal,
@@ -9,7 +9,7 @@ const {
 
 const router = express.Router();
 
-router.use(requireAuth, allowRoles("student"));
+router.use(requireAuth, requirePasswordChangeCompleted, allowRoles("student"));
 
 router.get("/portal", getStudentPortal);
 router.post("/tasks/:assignmentId/submit", submitHomework);

@@ -42,7 +42,7 @@ async function login(req, res, next) {
     const { email, password } = req.body;
 
     const [rows] = await pool.query(
-      "SELECT id, name, email, password_hash, role FROM users WHERE email = ? LIMIT 1",
+      "SELECT id, name, email, password_hash, role, must_change_password FROM users WHERE email = ? LIMIT 1",
       [email.toLowerCase().trim()]
     );
 
@@ -62,7 +62,13 @@ async function login(req, res, next) {
 
     return res.json({
       message: "Login successful",
-      user: { id: user.id, name: user.name, email: user.email, role: user.role }
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        mustChangePassword: Boolean(user.must_change_password)
+      }
     });
   } catch (err) {
     return next(err);
@@ -77,7 +83,7 @@ function logout(_req, res) {
 async function me(req, res, next) {
   try {
     const [rows] = await pool.query(
-      "SELECT id, name, email, role FROM users WHERE id = ? LIMIT 1",
+      "SELECT id, name, email, role, must_change_password FROM users WHERE id = ? LIMIT 1",
       [req.user.id]
     );
 
@@ -85,7 +91,80 @@ async function me(req, res, next) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    return res.json({ user: rows[0] });
+    return res.json({
+      user: {
+        id: rows[0].id,
+        name: rows[0].name,
+        email: rows[0].email,
+        role: rows[0].role,
+        mustChangePassword: Boolean(rows[0].must_change_password)
+      }
+    });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function changePassword(req, res, next) {
+  try {
+    const { currentPassword, newPassword } = req.body || {};
+
+    if (typeof newPassword !== "string") {
+      return res.status(400).json({ message: "newPassword is required" });
+    }
+
+    if (newPassword.trim().length < 8) {
+      return res.status(400).json({ message: "newPassword must be at least 8 characters" });
+    }
+
+    const [rows] = await pool.query(
+      "SELECT id, name, email, role, password_hash, must_change_password FROM users WHERE id = ? LIMIT 1",
+      [req.user.id]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const user = rows[0];
+    const mustChangePassword = Boolean(user.must_change_password);
+
+    if (!mustChangePassword) {
+      if (typeof currentPassword !== "string" || !currentPassword.trim()) {
+        return res.status(400).json({ message: "currentPassword is required" });
+      }
+
+      const currentPasswordMatched = await bcrypt.compare(currentPassword, user.password_hash);
+
+      if (!currentPasswordMatched) {
+        return res.status(401).json({ message: "Current password is incorrect" });
+      }
+    }
+
+    const samePassword = await bcrypt.compare(newPassword, user.password_hash);
+    if (samePassword) {
+      return res.status(400).json({ message: "New password must be different from current password" });
+    }
+
+    const nextPasswordHash = await bcrypt.hash(newPassword.trim(), 10);
+    await pool.query("UPDATE users SET password_hash = ?, must_change_password = 0 WHERE id = ?", [
+      nextPasswordHash,
+      user.id
+    ]);
+
+    const token = signAuthToken({ id: user.id, email: user.email, role: user.role });
+    setAuthCookie(res, token);
+
+    return res.json({
+      message: "Password changed successfully",
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        mustChangePassword: false
+      }
+    });
   } catch (err) {
     return next(err);
   }
@@ -94,5 +173,6 @@ async function me(req, res, next) {
 module.exports = {
   login,
   logout,
-  me
+  me,
+  changePassword
 };
