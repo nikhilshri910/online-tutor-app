@@ -8,12 +8,22 @@ import LoginPage from "./pages/LoginPage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
 import DashboardPage from "./pages/DashboardPage";
 import AdminPage from "./pages/AdminPage";
+import HomeContentEditorPage from "./pages/HomeContentEditorPage";
 import AppHeader from "./features/shared/components/AppHeader";
 import AnimatedPage from "./features/shared/ui/AnimatedPage";
 
 export default function App() {
   const { isAuthenticated, user } = useAuth();
   const location = useLocation();
+  const role = user?.role;
+
+  const defaultAuthenticatedPath = user?.mustChangePassword
+    ? "/change-password"
+    : role === "super_admin"
+      ? "/content-admin"
+      : role === "admin"
+        ? "/admin"
+        : "/dashboard";
 
   return (
     <div className="app-shell">
@@ -42,7 +52,7 @@ export default function App() {
             <Route
               path="/dashboard"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute roles={["student", "teacher"]}>
                   <AnimatedPage>
                     <DashboardPage />
                   </AnimatedPage>
@@ -62,6 +72,17 @@ export default function App() {
             />
 
             <Route
+              path="/content-admin"
+              element={
+                <ProtectedRoute roles={["super_admin"]}>
+                  <AnimatedPage>
+                    <HomeContentEditorPage />
+                  </AnimatedPage>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
               path="/change-password"
               element={
                 <ProtectedRoute allowPasswordChangeRequired>
@@ -74,7 +95,16 @@ export default function App() {
 
             <Route
               path="*"
-              element={<Navigate to={isAuthenticated ? (user?.mustChangePassword ? "/change-password" : "/dashboard") : "/"} replace />}
+              element={
+                <Navigate
+                  to={
+                    isAuthenticated
+                      ? defaultAuthenticatedPath
+                      : "/"
+                  }
+                  replace
+                />
+              }
             />
           </Routes>
         </AnimatePresence>

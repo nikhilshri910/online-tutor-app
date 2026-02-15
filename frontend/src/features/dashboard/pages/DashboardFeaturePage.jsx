@@ -12,7 +12,7 @@ import TeacherPortalPage from "../../teacher/pages/TeacherPortalPage";
 export default function DashboardFeaturePage() {
   const { user, logout } = useAuth();
   const notification = useNotification();
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === "admin" || user?.role === "super_admin";
   const isStudent = user?.role === "student";
   const isTeacher = user?.role === "teacher";
   const { courses, loading, error } = useDashboardData({ enabled: !isAdmin && !isStudent && !isTeacher });
@@ -28,7 +28,7 @@ export default function DashboardFeaturePage() {
       <DashboardHeader user={user} onLogout={logout} />
 
       {isAdmin ? (
-        <AdminDashboardCard />
+        <AdminDashboardCard showContentEditor={user?.role === "super_admin"} />
       ) : isStudent ? (
         <StudentPortalPage />
       ) : (

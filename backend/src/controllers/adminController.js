@@ -4,7 +4,7 @@ const { pool } = require("../config/db");
 const { uploadToVimeoFromUrl } = require("../services/vimeoService");
 const { createNotificationsForUsers } = require("../services/notificationService");
 
-const allowedRoles = ["admin", "teacher", "student"];
+const allowedRoles = ["super_admin", "admin", "teacher", "student"];
 
 function isNonEmptyString(value) {
   return typeof value === "string" && value.trim().length > 0;
@@ -74,7 +74,7 @@ async function createUser(req, res, next) {
     }
 
     if (!allowedRoles.includes(role)) {
-      return res.status(400).json({ message: "role must be admin, teacher, or student" });
+      return res.status(400).json({ message: "role must be super_admin, admin, teacher, or student" });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
@@ -120,7 +120,7 @@ async function updateUser(req, res, next) {
     }
 
     if (!allowedRoles.includes(role)) {
-      return res.status(400).json({ message: "role must be admin, teacher, or student" });
+      return res.status(400).json({ message: "role must be super_admin, admin, teacher, or student" });
     }
 
     const existingUser = await ensureUserExists(userId);

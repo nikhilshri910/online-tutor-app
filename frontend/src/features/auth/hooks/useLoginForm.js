@@ -33,7 +33,15 @@ export function useLoginForm() {
 
       try {
         const user = await login(form.email, form.password);
-        navigate(user?.mustChangePassword ? "/change-password" : "/dashboard");
+        if (user?.mustChangePassword) {
+          navigate("/change-password");
+        } else if (user?.role === "super_admin") {
+          navigate("/content-admin");
+        } else if (user?.role === "admin") {
+          navigate("/admin");
+        } else {
+          navigate("/dashboard");
+        }
       } catch (err) {
         notification.error(getErrorMessage(err));
       } finally {

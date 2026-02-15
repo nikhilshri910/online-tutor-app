@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { api } from "../api/client";
+import { API_ENDPOINTS } from "../api/api-constant";
 
 const AuthContext = createContext(null);
 
@@ -9,7 +10,7 @@ export function AuthProvider({ children }) {
 
   const refreshMe = useCallback(async () => {
     try {
-      const response = await api.get("/api/auth/me");
+      const response = await api.get(API_ENDPOINTS.auth.profile);
       setUser(response.data.user);
     } catch (_err) {
       setUser(null);
@@ -23,13 +24,13 @@ export function AuthProvider({ children }) {
   }, [refreshMe]);
 
   const login = useCallback(async (email, password) => {
-    const response = await api.post("/api/auth/login", { email, password });
+    const response = await api.post(API_ENDPOINTS.auth.login, { email, password });
     setUser(response.data.user);
     return response.data.user;
   }, []);
 
   const logout = useCallback(async () => {
-    await api.post("/api/auth/logout");
+    await api.post(API_ENDPOINTS.auth.logout);
     setUser(null);
   }, []);
 
@@ -39,7 +40,7 @@ export function AuthProvider({ children }) {
       payload.currentPassword = currentPassword;
     }
 
-    const response = await api.post("/api/auth/change-password", payload);
+    const response = await api.post(API_ENDPOINTS.auth.changePassword, payload);
     setUser(response.data.user);
     return response.data.user;
   }, []);

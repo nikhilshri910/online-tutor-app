@@ -11,21 +11,21 @@ const { uploadRecording } = require("../controllers/videoController");
 
 const router = express.Router();
 
-router.post("/", requireAuth, requirePasswordChangeCompleted, allowRoles("admin"), createCourse);
+router.post("/", requireAuth, requirePasswordChangeCompleted, allowRoles("admin", "super_admin"), createCourse);
 router.post("/:courseId/enroll", requireAuth, requirePasswordChangeCompleted, allowRoles("student"), enrollInCourse);
 router.get("/my", requireAuth, requirePasswordChangeCompleted, getMyCourses);
 router.post(
   "/:courseId/live-sessions",
   requireAuth,
   requirePasswordChangeCompleted,
-  allowRoles("admin", "teacher"),
+  allowRoles("admin", "teacher", "super_admin"),
   saveZoomLink
 );
 router.post(
   "/:courseId/recordings",
   requireAuth,
   requirePasswordChangeCompleted,
-  allowRoles("admin", "teacher"),
+  allowRoles("admin", "teacher", "super_admin"),
   uploadRecording
 );
 

@@ -1,105 +1,13 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { APP_META } from "../config/appMeta";
 import { useNotification } from "../features/shared/notifications/NotificationContext";
-
-const professionals = [
-  {
-    name: "Subhranil Maity",
-    role: "Academic Mentor - Science",
-    experience: "9+ years",
-    focus: "Class 9-12 | WB, CBSE, ICSE"
-  },
-  {
-    name: "Anwesha Singha",
-    role: "Foundation Faculty - Maths",
-    experience: "8+ years",
-    focus: "JEE/NEET Foundation | Class 7-10"
-  },
-  {
-    name: "Riya Sen",
-    role: "Communication & AI Skills Coach",
-    experience: "7+ years",
-    focus: "Spoken English | AI Readiness"
-  }
-];
-
-const programs = [
-  {
-    title: "Syllabus-Oriented Learning",
-    description:
-      "Complete curriculum coverage for Classes 7-12 across WB Board, CBSE, and ICSE in English and Bengali."
-  },
-  {
-    title: "JEE & NEET Foundation",
-    description:
-      "Early concept building for students targeting engineering and medical careers from school level."
-  },
-  {
-    title: "Government Exam Readiness",
-    description:
-      "UPSC and public-service foundation through strong secondary-level concepts and disciplined prep."
-  },
-  {
-    title: "Spoken English & AI Skills",
-    description:
-      "Communication confidence plus AI literacy so students are future-ready in academics and career."
-  }
-];
-
-const flipSteps = [
-  {
-    step: "01",
-    title: "Video Learning Before Class",
-    detail:
-      "Students watch short chapter-wise videos first, so they enter live sessions with context and questions."
-  },
-  {
-    step: "02",
-    title: "Live Q&A Focused Class",
-    detail:
-      "Teachers spend live time on doubt solving, exam patterns, and deeper understanding instead of one-way lecturing."
-  },
-  {
-    step: "03",
-    title: "Smart Notes + Practice",
-    detail:
-      "Printed/digital smart notes and guided practice help students revise quickly and retain more."
-  },
-  {
-    step: "04",
-    title: "Daily Tests + Monthly Mocks",
-    detail:
-      "Regular assessments track improvement and identify exactly where mentor intervention is needed."
-  }
-];
-
-const faqItems = [
-  {
-    question: "Can students learn in Bengali and English?",
-    answer:
-      "Yes. We support bilingual learning so students can grasp concepts in the language they are most comfortable with."
-  },
-  {
-    question: "Which boards and classes do you support?",
-    answer:
-      "We support learners from Class 7 to 12 for WB Board, CBSE, and ICSE with board-aligned learning plans."
-  },
-  {
-    question: "Do you provide JEE/NEET and UPSC foundation support?",
-    answer:
-      "Yes. We provide early foundation tracks that run alongside school syllabus to build long-term competitive readiness."
-  },
-  {
-    question: "How do parents track progress?",
-    answer:
-      "Parents receive periodic updates through test performance, mentor feedback, and clear academic action points."
-  }
-];
+import { DEFAULT_HOME_CONTENT } from "../features/site-content/defaultHomeContent";
+import { fetchHomeContent } from "../features/site-content/contentService";
 
 export default function HomePage() {
   const { isAuthenticated } = useAuth();
   const notification = useNotification();
+  const [content, setContent] = useState(DEFAULT_HOME_CONTENT);
   const [form, setForm] = useState({
     fullName: "",
     phone: "",
@@ -109,13 +17,29 @@ export default function HomePage() {
     message: ""
   });
 
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadContent() {
+      try {
+        const serverContent = await fetchHomeContent();
+        if (isMounted && serverContent) {
+          setContent(serverContent);
+        }
+      } catch (_error) {
+        // Keep fallback content when API is unavailable.
+      }
+    }
+
+    loadContent();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const heroStats = useMemo(
-    () => [
-      { label: "Active learners", value: "1,500+" },
-      { label: "Expert educators", value: "60+" },
-      { label: "Parent trust score", value: "4.8/5" }
-    ],
-    []
+    () => content?.hero?.stats || [],
+    [content]
   );
 
   function setField(name, value) {
@@ -141,16 +65,28 @@ export default function HomePage() {
     });
   }
 
+  const appTitle = content?.appMeta?.title || "Brainwave FZCO";
+  const professionals = content?.professionals || [];
+  const programs = content?.programs || [];
+  const traditionalPoints = content?.comparison?.traditional || [];
+  const flippedPoints = content?.comparison?.flipped || [];
+  const problemPoints = content?.problemSolution?.problem || [];
+  const solutionPoints = content?.problemSolution?.solution || [];
+  const flipSteps = content?.flipSteps || [];
+  const outcomes = content?.outcomes || [];
+  const journeys = content?.journeys || [];
+  const faqItems = content?.faq || [];
+
   return (
     <div className="page home-page">
       <section className="home-hero card">
         <div className="home-hero-grid">
           <div className="home-hero-content">
-            <p className="home-kicker">School & Career Guide Program</p>
-            <h1 className="home-title">Board success, competitive foundation, and future-ready skills.</h1>
+            <p className="home-kicker">{content?.hero?.kicker || "School & Career Guide Program"}</p>
+            <h1 className="home-title">{content?.hero?.title || "Board success, competitive foundation, and future-ready skills."}</h1>
             <p className="muted home-subtitle">
-              At {APP_META.title}, we support students with syllabus excellence, JEE/NEET and
-              government exam foundation, Spoken English, and AI awareness from school years.
+              {content?.hero?.subtitle ||
+                "At Brainwave FZCO, we support students with syllabus excellence, JEE/NEET and government exam foundation, Spoken English, and AI awareness from school years."}
             </p>
             <div className="home-actions">
               <a className="btn btn-primary" href="#enquiry">
@@ -204,19 +140,17 @@ export default function HomePage() {
           <article className="home-compare-card home-compare-old">
             <h3>Traditional Classroom</h3>
             <ul className="home-compare-list">
-              <li>No prior preparation before class</li>
-              <li>Live class feels heavy and rushed</li>
-              <li>Doubts appear later without support</li>
-              <li>Learning fades quickly over time</li>
+              {traditionalPoints.map((point) => (
+                <li key={point}>{point}</li>
+              ))}
             </ul>
           </article>
           <article className="home-compare-card home-compare-new">
-            <h3>Flipped Classroom by {APP_META.title}</h3>
+            <h3>Flipped Classroom by {appTitle}</h3>
             <ul className="home-compare-list">
-              <li>Video learning before live class</li>
-              <li>Live sessions focused on doubt solving</li>
-              <li>Daily tests and mentor feedback</li>
-              <li>Recordings + notes for long-term retention</li>
+              {flippedPoints.map((point) => (
+                <li key={point}>{point}</li>
+              ))}
             </ul>
           </article>
         </div>
@@ -230,19 +164,17 @@ export default function HomePage() {
           <article className="home-ps-card">
             <h3>The Problem</h3>
             <ul className="home-compare-list">
-              <li>Zero preparation before class topics</li>
-              <li>Limited classroom time to absorb everything</li>
-              <li>Unresolved doubts after class</li>
-              <li>Subjects become harder with each chapter</li>
+              {problemPoints.map((point) => (
+                <li key={point}>{point}</li>
+              ))}
             </ul>
           </article>
           <article className="home-ps-card">
             <h3>The Solution</h3>
             <ul className="home-compare-list">
-              <li>Pre-learning through animated lessons</li>
-              <li>Real-time doubt clarification in class</li>
-              <li>Daily mock tests to track growth</li>
-              <li>Mentor support for struggling students</li>
+              {solutionPoints.map((point) => (
+                <li key={point}>{point}</li>
+              ))}
             </ul>
           </article>
         </div>
@@ -292,10 +224,11 @@ export default function HomePage() {
           <p className="muted">Parents trust us because our model converts effort into measurable results.</p>
         </div>
         <div className="home-outcome-grid">
-          <article className="home-outcome-item">Learn on mobile, tablet, laptop, and smart TV setup.</article>
-          <article className="home-outcome-item">Visual content + live classes + notes + daily and monthly tests.</article>
-          <article className="home-outcome-item">Aligned support for WB Bengali/English medium, CBSE, and ICSE.</article>
-          <article className="home-outcome-item">Strong base for school results and competitive future pathways.</article>
+          {outcomes.map((item) => (
+            <article className="home-outcome-item" key={item}>
+              {item}
+            </article>
+          ))}
         </div>
       </section>
 
@@ -304,25 +237,26 @@ export default function HomePage() {
           <h2>Student Journey Snapshot</h2>
         </div>
         <div className="home-journey-grid">
-          <article className="home-journey-card">
-            <h3>Abir Mondal - Class IX</h3>
-            <p className="muted">Before: 33% | After: 82%</p>
-            <p className="home-professional-exp">Success formula: Smart Notes + Mock Tests</p>
-          </article>
-          <article className="home-journey-card">
-            <h3>Riya Sen - Class VII</h3>
-            <p className="muted">Before: 42% | After: 78%</p>
-            <p className="home-professional-exp">Success formula: Pre-learning + Live Doubt Sessions</p>
-          </article>
+          {journeys.map((item) => (
+            <article className="home-journey-card" key={`${item.learner}-${item.classLevel}`}>
+              <h3>
+                {item.learner} - {item.classLevel}
+              </h3>
+              <p className="muted">
+                Before: {item.beforeScore} | After: {item.afterScore}
+              </p>
+              <p className="home-professional-exp">Success formula: {item.formula}</p>
+            </article>
+          ))}
         </div>
       </section>
 
       <section className="home-section card" id="enquiry">
         <div className="home-section-head">
-          <h2>Talk to a Mentor</h2>
+          <h2>{content?.enquiry?.title || "Talk to a Mentor"}</h2>
           <p className="muted">
-            Take the first step toward your child&apos;s success. We will call you with a
-            personalized guidance plan.
+            {content?.enquiry?.subtitle ||
+              "Take the first step toward your child's success. We will call you with a personalized guidance plan."}
           </p>
         </div>
         <form className="home-enquiry-form" onSubmit={handleSubmit}>
@@ -409,13 +343,8 @@ export default function HomePage() {
       </section>
 
       <section className="home-section card home-footer-note">
-        <p>
-          <strong>{APP_META.title}</strong> supports students from Class 7-12 with board-aligned,
-          bilingual, and future-ready learning.
-        </p>
-        <p className="muted">
-          FZCO refers to a Free Zone Company registered in the UAE.
-        </p>
+        {content?.footer?.summary ? <p>{content.footer.summary}</p> : null}
+        {content?.footer?.note ? <p className="muted">{content.footer.note}</p> : null}
       </section>
     </div>
   );

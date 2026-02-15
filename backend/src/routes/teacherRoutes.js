@@ -5,7 +5,7 @@ const { createHomeworkTask, getTeacherDashboard } = require("../controllers/teac
 
 const router = express.Router();
 
-router.use(requireAuth, requirePasswordChangeCompleted, allowRoles("teacher", "admin"));
+router.use(requireAuth, requirePasswordChangeCompleted, allowRoles("teacher", "admin", "super_admin"));
 
 router.get("/dashboard", getTeacherDashboard);
 router.post("/courses/:courseId/tasks", createHomeworkTask);

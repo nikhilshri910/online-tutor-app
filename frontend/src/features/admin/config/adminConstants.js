@@ -9,6 +9,7 @@ export const ADMIN_MESSAGES = {
 };
 
 export const USER_ROLE_OPTIONS = [
+  { value: "super_admin", label: "Super Admin" },
   { value: "student", label: "Student" },
   { value: "teacher", label: "Teacher" },
   { value: "admin", label: "Admin" }

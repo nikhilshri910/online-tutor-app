@@ -1,10 +1,7 @@
 import { api } from "../../../api/client";
-
-const DASHBOARD_ENDPOINTS = {
-  myCourses: "/api/courses/my"
-};
+import { API_ENDPOINTS } from "../../../api/api-constant";
 
 export async function fetchMyCourses() {
-  const response = await api.get(DASHBOARD_ENDPOINTS.myCourses);
+  const response = await api.get(API_ENDPOINTS.dashboard.myCourses);
   return response.data.courses || [];
 }

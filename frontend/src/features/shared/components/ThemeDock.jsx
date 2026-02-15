@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "../theme/ThemeContext";
+import { useAuth } from "../../../context/AuthContext";
 
 export default function ThemeDock() {
   const { themeId, mode, themes, setThemeId, toggleMode } = useTheme();
+  const { isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [themeSubmenuOpen, setThemeSubmenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -40,6 +44,16 @@ export default function ThemeDock() {
     }
   }
 
+  async function handleLogout() {
+    try {
+      await logout();
+    } finally {
+      setMenuOpen(false);
+      setThemeSubmenuOpen(false);
+      navigate("/", { replace: true });
+    }
+  }
+
   return (
     <div className="settings-menu" ref={menuRef}>
       <button
@@ -66,12 +80,14 @@ export default function ThemeDock() {
             onClick={() => setThemeSubmenuOpen((prev) => !prev)}
             aria-expanded={themeSubmenuOpen}
           >
-            <span>Theme</span>
+            <span>Appearance</span>
             <span aria-hidden="true">{themeSubmenuOpen ? "▾" : "▸"}</span>
           </button>
 
           {themeSubmenuOpen ? (
             <div className="settings-submenu">
+              <div className="settings-section">
+                <div className="settings-section-title">Mode</div>
               <div className="settings-mode-row">
                 <button
                   type="button"
@@ -88,7 +104,12 @@ export default function ThemeDock() {
                   Dark
                 </button>
               </div>
+              </div>
 
+              <div className="settings-divider" role="separator" aria-hidden="true" />
+
+              <div className="settings-section">
+                <div className="settings-section-title">Color</div>
               <div className="settings-theme-grid">
                 {themes.map((theme) => (
                   <button
@@ -101,7 +122,14 @@ export default function ThemeDock() {
                   </button>
                 ))}
               </div>
+              </div>
             </div>
+          ) : null}
+
+          {isAuthenticated ? (
+            <button type="button" className="settings-item" onClick={handleLogout}>
+              <span>Logout</span>
+            </button>
           ) : null}
         </div>
       ) : null}

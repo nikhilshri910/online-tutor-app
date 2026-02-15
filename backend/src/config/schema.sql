@@ -7,9 +7,18 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(255) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
   must_change_password TINYINT(1) NOT NULL DEFAULT 0,
-  role ENUM('admin', 'teacher', 'student') NOT NULL,
+  role ENUM('super_admin', 'admin', 'teacher', 'student') NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS site_contents (
+  content_key VARCHAR(64) PRIMARY KEY,
+  content_json JSON NOT NULL,
+  updated_by INT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_site_contents_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS courses (

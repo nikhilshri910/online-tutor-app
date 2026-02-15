@@ -121,6 +121,16 @@ select {
   gap: 0.6rem;
 }
 
+.app-header-greeting {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  font-weight: 600;
+  max-width: 32ch;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .app-header-auth-link {
   min-width: 108px;
 }
@@ -402,6 +412,106 @@ p {
   gap: 0.5rem;
 }
 
+.content-editor-form {
+  margin-top: 1rem;
+}
+
+.content-editor-textarea {
+  min-height: min(65vh, 760px);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
+  font-size: 0.9rem;
+}
+
+.content-console-layout {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: clamp(240px, 24vw, 320px) minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.content-console-sidebar-card {
+  align-self: start;
+  position: sticky;
+  top: 84px;
+}
+
+.content-console-sidebar-card .side-nav {
+  grid-template-columns: 1fr;
+}
+
+.content-console-content-card {
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.content-console-content-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.45rem;
+}
+
+.content-console-section {
+  display: grid;
+  gap: 0.5rem;
+}
+
+/* Ensure consistent spacing between form fields and buttons inside forms/panels */
+form .btn,
+.card form .btn,
+.panel form .btn,
+.content-console-item-card .btn,
+.content-console-list-header .btn {
+  margin-top: 0.7rem;
+}
+
+/* Ensure individual action buttons inside panels also have breathing room */
+.panel .btn,
+.header-actions .btn,
+.app-header-actions .btn {
+  margin-left: 0.45rem;
+}
+
+/* Make form action buttons compact by default (non-modal forms) */
+form:not(.modal-form) .btn,
+.card:not(.modal-card) form .btn {
+  width: auto;
+  min-width: 120px;
+  align-self: start;
+  padding: 0.42rem 0.7rem;
+  font-size: 0.95rem;
+}
+
+/* Specific rule for enquiry submit button to avoid full-width */
+.home-enquiry-submit {
+  width: auto;
+  min-width: 120px;
+  justify-self: start;
+}
+
+.content-console-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.content-console-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+}
+
+.content-console-item-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--bg-elevated) 87%, var(--accent-soft));
+  padding: 0.8rem;
+  display: grid;
+  gap: 0.65rem;
+}
+
 @media (max-width: 980px) {
   .home-hero-grid {
     grid-template-columns: 1fr;
@@ -451,11 +561,11 @@ p {
 }
 
 form.card {
-  width: min(480px, 92vw);
+  /* width removed to allow forms to flex naturally with their container */
 }
 
 .password-change-card {
-  width: min(480px, 92vw);
+  /* width removed so password change card follows responsive layout */
 }
 
 .field-label {
@@ -850,6 +960,28 @@ textarea {
   width: 100%;
 }
 
+.modal-card .btn,
+.modal-body .btn,
+.modal-overlay .btn {
+  /* Smaller, tighter buttons inside modals */
+  min-height: 36px;
+  padding: 0.42rem 0.7rem;
+  font-size: 0.92rem;
+  border-radius: 8px;
+}
+
+/* Make modal form actions compact and not full-width */
+.modal-card .modal-form .btn {
+  width: auto;
+  min-width: 96px;
+}
+
+/* Reduce excessive vertical spacing inside modal panels */
+.modal-card .content-console-item-card .btn,
+.modal-card .content-console-list-header .btn {
+  margin-top: 0.45rem;
+}
+
 .modal-form .check-row input[type="checkbox"] {
   width: 18px;
   height: 18px;
@@ -959,6 +1091,25 @@ textarea {
   display: grid;
   gap: 0.6rem;
   background: color-mix(in srgb, var(--bg-elevated) 92%, var(--accent-soft));
+}
+
+.settings-section {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.settings-section-title {
+  font-size: 0.78rem;
+  letter-spacing: 0.35px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.settings-divider {
+  height: 1px;
+  background: var(--border);
+  opacity: 0.9;
 }
 
 .settings-mode-row {
@@ -1082,6 +1233,13 @@ textarea {
   overflow: hidden;
 }
 
+@media (max-width: 1180px) {
+  .content-console-layout {
+    grid-template-columns: clamp(220px, 30vw, 280px) minmax(0, 1fr);
+    gap: 0.8rem;
+  }
+}
+
 @media (max-width: 720px) {
   .app-header-inner {
     padding: 0.7rem 1rem;
@@ -1102,6 +1260,11 @@ textarea {
     width: 100%;
     justify-content: space-between;
     flex-wrap: wrap;
+  }
+
+  .app-header-greeting {
+    width: 100%;
+    max-width: 100%;
   }
 
   .app-header-auth-link {
@@ -1164,6 +1327,138 @@ textarea {
     position: static;
   }
 
+  .content-console-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .content-console-sidebar-card {
+    position: static;
+  }
+
+  .content-console-sidebar-card .side-nav {
+    grid-template-columns: 1fr;
+  }
+
+  .content-console-content-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .content-console-list-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* Teacher console layout (sidebar + main) for small screens stacked handled below */
+ }
+
+/* Teacher console layout (sidebar + main) */
+.teacher-console-layout {
+  display: grid;
+  grid-template-columns: clamp(220px, 24vw, 300px) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.teacher-sidebar {
+  position: sticky;
+  top: 84px;
+  align-self: start;
+}
+
+.teacher-main {
+  min-width: 0;
+  display: grid;
+  gap: 0.9rem;
+}
+
+@media (max-width: 900px) {
+  .teacher-console-layout {
+    grid-template-columns: 1fr;
+  }
+  .teacher-sidebar {
+    position: static;
+  }
+}
+
+/* ProSidebar theming to match app variables */
+.pro-sidebar {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  padding: 0.5rem;
+  color: var(--text);
+}
+
+.pro-sidebar .pro-menu {
+  padding: 0.25rem;
+}
+
+.pro-sidebar .pro-menu-item {
+  border-radius: 8px;
+  margin: 0.2rem 0;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.56rem 0.72rem;
+}
+
+.pro-sidebar .pro-menu-item:hover {
+  background: color-mix(in srgb, var(--primary) 8%, var(--bg-elevated));
+  color: var(--primary);
+}
+
+.pro-sidebar .pro-menu-item.pro-active,
+.pro-sidebar .pro-menu-item.active {
+  background: color-mix(in srgb, var(--primary) 18%, var(--bg-elevated));
+  color: var(--primary);
+  border: 1px solid color-mix(in srgb, var(--primary) 36%, var(--border));
+}
+
+.pro-sidebar .pro-icon-wrapper {
+  width: 28px;
+  height: 28px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+}
+
+.pro-sidebar .pro-item-content {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.side-nav-item.is-active .pro-item-content {
+  color: var(--primary);
+}
+
+/* Stronger overrides to ensure ProSidebar uses app theme (library default may apply darker bg) */ 
+.pro-sidebar,
+.pro-sidebar .pro-sidebar-inner,
+.pro-sidebar .pro-menu,
+.pro-sidebar .pro-menu-item {
+  background: var(--bg-elevated) !important;
+  color: var(--text) !important;
+}
+
+.pro-sidebar .pro-menu-item,
+.pro-sidebar .pro-menu-item .pro-item-content {
+  background: transparent !important;
+  color: inherit !important;
+}
+
+.pro-sidebar .pro-menu-item:hover,
+.pro-sidebar .pro-menu-item.pro-active,
+.pro-sidebar .pro-menu-item.active {
+  background: color-mix(in srgb, var(--primary) 12%, var(--bg-elevated)) !important;
+  color: var(--primary) !important;
+}
+
+@media (max-width: 720px) {
   .side-nav {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

@@ -5,6 +5,7 @@ USE online_tuition;
 
 INSERT INTO users (name, email, password_hash, role)
 VALUES
+  ('Super Admin User', 'superadmin@example.com', '$2a$10$REPLACE_WITH_BCRYPT_HASH', 'super_admin'),
   ('Admin User', 'admin@example.com', '$2a$10$REPLACE_WITH_BCRYPT_HASH', 'admin'),
   ('Teacher User', 'teacher@example.com', '$2a$10$REPLACE_WITH_BCRYPT_HASH', 'teacher'),
   ('Student User', 'student@example.com', '$2a$10$REPLACE_WITH_BCRYPT_HASH', 'student');
